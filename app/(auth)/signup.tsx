@@ -14,7 +14,7 @@ const Signup = () => {
    const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
-  const { user, token, isLoading, register } = useAuthStore();
+  const { isLoading, register } = useAuthStore();
 
   const handleSignup = async () => {
     const result = await register(userName, email, password);
@@ -24,8 +24,6 @@ const Signup = () => {
     } else {
       Alert.alert("Error", result.error || "Something went wrong");
     }
-
-    console.log(user, token)
   }
   
   return (

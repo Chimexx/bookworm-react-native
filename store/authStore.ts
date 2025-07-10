@@ -1,9 +1,7 @@
 import { User } from "@/interfaces";
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-
-const baseUrl = process.env.BASE_URL;
+import { BASE_URL } from "@/constants/api";
 
 // Define the shape of the register response
 interface RegisterRes {
@@ -17,8 +15,12 @@ interface AuthState {
   token: string;
   isLoading: boolean;
   error: string;
+  isAuthChecked: boolean;
   setUser: (user: User) => void;
   setIsLoading: (loading: boolean) => void;
+  checkAuth: () => void;
+  logOut: () => void;
+  login: (email: string, password: string) => Promise<RegisterRes>;
   register: (
     username: string,
     email: string,
@@ -31,6 +33,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: "",
   isLoading: false,
+  isAuthChecked: false,
   error: "",
 
   setUser: (user: User) => {
@@ -49,7 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: "" });
 
     try {
-      const response = await fetch(`${baseUrl}auth/register`, {
+      const response = await fetch(`${BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,5 +78,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }
+  },
+
+  login: async (email: string, password: string): Promise<RegisterRes> => {
+    set({ isLoading: true, error: "" });
+
+    try {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to login user");
+      }
+
+      set({ user: data.user, token: data.token });
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+      await AsyncStorage.setItem("token", data.token);
+
+      set({ isLoading: false });
+
+      return { success: true };
+    } catch (error) {
+      const message = (error as Error).message;
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  checkAuth: async () => {
+    try {
+      const token = (await AsyncStorage.getItem("token")) || "";
+      const userJson = await AsyncStorage.getItem("user");
+      const user = userJson ? JSON.parse(userJson) : null;
+
+      set({ token, user, isAuthChecked: true });
+    } catch (error) {
+      const message = (error as Error).message;
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  logOut: async () => {
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("user");
+    set({ token: "", user: null });
   },
 }));

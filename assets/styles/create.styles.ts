@@ -26,14 +26,16 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   header: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
     alignItems: "center",
     marginBottom: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
     color: COLORS.textPrimary,
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
