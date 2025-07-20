@@ -1,124 +1,117 @@
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { useRouter } from 'expo-router';
 import styles from '@/assets/styles/create.styles';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '@/constants/colors';
 import * as ImagePicker from "expo-image-picker"
-import * as FileSystem from "expo-file-system"
-import { useAuthStore } from '@/store/authStore';
-import { BASE_URL } from '@/constants/api';
+import { dataURItoBlob } from '@/utils/convertImage.utils';
+import { useApi } from '@/hooks.ts/useApi';
+import { Image } from "expo-image"
 
 const Create = () => {
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [rating, setRating] = useState(3);
-  const [image, setImage] = useState("");
-  const [imageBase64, setImageBase64] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [asset, setAsset] = useState<any>();
 
   const router = useRouter()
-  const {token} = useAuthStore()
+  const { request, loading } = useApi();
 
   const pickImage = async () => {
     try {
-      //Request permission from user
-      if (Platform.OS !== "web") {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Permission denied, allow permission to enable us upload an image.")
-        }
+      // Request permission from user
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied!',
+          'Sorry, we need camera roll permissions to make this work. Please enable them in your device settings.'
+        );
+        return;
       }
 
-      //Launch image picker
+      // Launch image picker with better error handling
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.5, //quality, 1 means original quality
-        base64: true
-      })
-      
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
+        quality: 0.7,
+        base64: false
+      });
 
-        if(result.assets[0].base64) {
-          setImageBase64(result.assets[0].base64)
-        } else {
-          const base64 = await FileSystem.readAsStringAsync(result.assets[0].uri, {
-            encoding: FileSystem.EncodingType.Base64
-          })
-        }
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+        // Add type safety
+        setAsset({
+          uri: selectedAsset.uri,
+          type: selectedAsset.type || 'image',
+          fileName: selectedAsset.fileName || `image_${Date.now()}.jpg`
+        });
       }
     } catch (error) {
-      Alert.alert("An error occured while lauching image picker")
+      console.error('Image picker error:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'An error occurred while selecting image'
+      );
     }
   }
 
-  const handleSubmit = async() => {
-    if(!title || !caption || !image || !rating) {
-      Alert.alert("Error", "All fields are required")
+  const handleSubmit = async () => {
+    if (!title.trim() || !caption.trim() || !asset || !rating) {
+      Alert.alert("Error", "All fields are required");
       return;
     }
 
-    //Get file extension
-    const uriParts = image.split(".");
-    const fileType = uriParts[uriParts.length - 1];
-    const imageType = fileType ? `${fileType.toLowerCase()}` : "image/jpeg";
-    const imageDataUrl = `${imageType};base64,${imageBase64}`;
-
     try {
-      setLoading(true);
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("description", caption.trim());
+      formData.append("rating", rating.toString());
 
-      const response = await fetch(`${BASE_URL}/books`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          {
-            title,
-            caption,
-            rating: rating.toString(),
-            image: imageDataUrl
-          }),
-      });
+      let imageUri = asset.uri;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to post book");
+      if (imageUri.includes("%25")) {
+        imageUri = decodeURIComponent(imageUri);
       }
 
-      Alert.alert("Success", "Book posted successfully");
-      
+      const imageFile = {
+        uri: imageUri,
+        name: asset.fileName || `upload_${Date.now()}.jpg`,
+        type: asset.type === 'image' ? 'image/jpeg' : asset.type || 'image/jpeg',
+      };
+
+      // formData.append("image", imageFile as any);
+
+      await request("/books", "POST", formData);
+
+      Alert.alert("Upload Successful", "Your book has been shared successfully!");
+
       setCaption("");
       setTitle("");
-      setImage("");
+      setAsset(undefined);
       setRating(3);
-      setImageBase64("")
-      
       router.push("/");
-    } catch (error) {
-      console.log(error)
-      throw new Error("Error:", (error as any)?.message || "Failed to post book");
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.message ||
+        error.message ||
+        "Book posting failed. Please try again.";
+      Alert.alert("Failed", errorMessage);
     }
-
-  }
+  };
 
   const renderRatingPicker = () => {
     const stars = [] as any;
 
     Array.from({ length: 5 }).forEach((star,index) => {
       stars.push(
-        <TouchableOpacity key={index} onPress={() => setRating(index)} style={styles.starButton}>
+        <TouchableOpacity key={index} onPress={() => setRating(index + 1)} style={styles.starButton}>
           <Ionicons
-            name={index <= rating ? "star" : "star-outline"}
+            name={index + 1 <= rating ? "star" : "star-outline"}
             size={32}
-            color={index <= rating ? "#f4b400" : COLORS.textSecondary}
+            color={index + 1 <= rating ? "#f4b400" : COLORS.textSecondary}
           />
         </TouchableOpacity>
       )
@@ -131,7 +124,8 @@ const Create = () => {
     <KeyboardAvoidingView
       style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>Add Book Recommendation</Text>
@@ -163,8 +157,8 @@ const Create = () => {
             <View style={styles.formGroup}>
               <Text style={styles.label}>Book Image</Text>
               <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                {image ? (
-                <Image source={{ uri: image }} style={styles.previewImage} />
+                {asset ? (
+                <Image source={{ uri: asset.uri }} style={styles.previewImage} />
                 ): (
                   <View style={styles.placeholderContainer}>
                     <Ionicons name="image-outline" size={60} color={COLORS.textSecondary} />
