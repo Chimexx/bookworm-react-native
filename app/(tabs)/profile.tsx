@@ -6,22 +6,25 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-
 import useBooks from '@/hooks.ts/useBooks';
 import { useAuthStore } from '@/store/authStore';
 import ProfileHeader from '../components/ProfileHeader';
 import LogoutButton from '../components/LogoutButton';
-import { Book } from '.';
 import { IBook } from '@/interface/book.interface';
 import styles from '@/assets/styles/profile.styles';
 import COLORS from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useApi } from '@/hooks.ts/useApi';
+import ProfileBook from '../components/Book';
 
 const Profile = () => {
   const router = useRouter();
   const { logOut } = useAuthStore();
+  const [progress, setProgress] = React.useState(false);
+  const [selectedBook, setSelectedBook] = React.useState<IBook | null>(null);
 
   const {
     books,
@@ -31,6 +34,8 @@ const Profile = () => {
     loadBooks,
   } = useBooks();
 
+  const { request } = useApi();
+  
   const refreshBooks = useCallback(() => {
     loadBooks({ pageToLoad: 1, isRefresh: true, subRoute: "/user" });
   }, []);
@@ -45,6 +50,25 @@ const Profile = () => {
     refreshBooks();
   }, [refreshBooks]);
 
+  const handleDeleteBook = async(id: string) => {
+    try {
+      setProgress(true)
+      const response = await request(
+        `/books/${id}`,
+        "DELETE"
+      );
+
+      if (response) {
+        Alert.alert("Success", "Book deleted successfully");
+        refreshBooks();
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setProgress(false)
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ProfileHeader />
@@ -57,7 +81,14 @@ const Profile = () => {
 
       <FlatList
         data={books}
-        renderItem={({ item }) => <Book book={item as IBook} />}
+        renderItem={({ item }) =>
+          <ProfileBook
+            progress={progress}
+            selectedBook={selectedBook}
+            book={item as IBook}
+            handleDeleteBook={handleDeleteBook}
+            setSelectedBook={setSelectedBook}
+          />}
         keyExtractor={(item) => (item as IBook)._id}
         contentContainerStyle={styles.booksList}
         showsVerticalScrollIndicator={false}
