@@ -3,4 +3,5 @@ export interface User {
   email: string;
   userName: string;
   profileImage?: string;
+  createdAt?: any
 }

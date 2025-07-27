@@ -20,7 +20,6 @@ const Create = () => {
 
   const pickImage = async () => {
     try {
-      // Request permission from user
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
@@ -31,22 +30,22 @@ const Create = () => {
         return;
       }
 
-      // Launch image picker with better error handling
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.7,
-        base64: false
+        base64: true
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
-        // Add type safety
+
         setAsset({
           uri: selectedAsset.uri,
           type: selectedAsset.type || 'image',
-          fileName: selectedAsset.fileName || `image_${Date.now()}.jpg`
+          fileName: selectedAsset.fileName || `image_${Date.now()}.jpg`,
+          base64: selectedAsset.base64
         });
       }
     } catch (error) {
@@ -56,35 +55,32 @@ const Create = () => {
         error instanceof Error ? error.message : 'An error occurred while selecting image'
       );
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (!title.trim() || !caption.trim() || !asset || !rating) {
+    if (!title.trim() || !caption.trim() || !rating) {
       Alert.alert("Error", "All fields are required");
       return;
     }
 
+    if (!asset?.base64) {
+      Alert.alert("Error", "Please select an image to upload");
+      return;
+    }
+
     try {
-      const formData = new FormData();
-      formData.append("title", title.trim());
-      formData.append("description", caption.trim());
-      formData.append("rating", rating.toString());
-
-      let imageUri = asset.uri;
-
-      if (imageUri.includes("%25")) {
-        imageUri = decodeURIComponent(imageUri);
-      }
-
-      const imageFile = {
-        uri: imageUri,
-        name: asset.fileName || `upload_${Date.now()}.jpg`,
-        type: asset.type === 'image' ? 'image/jpeg' : asset.type || 'image/jpeg',
+      const payload = {
+        title: title.trim(),
+        description: caption.trim(),
+        rating,
+        image: {
+          base64: asset.base64,
+          name: asset.fileName,
+          type: asset.type
+        }
       };
 
-      // formData.append("image", imageFile as any);
-
-      await request("/books", "POST", formData);
+      await request("/books", "POST", payload);
 
       Alert.alert("Upload Successful", "Your book has been shared successfully!");
 

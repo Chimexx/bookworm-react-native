@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios, { AxiosRequestConfig } from "axios";
 import { BASE_URL } from "@/constants/api";
 import { useAuthStore } from "@/store/authStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -22,8 +23,6 @@ export const useApi = <T = any>(): UseApiResult<T> => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { token } = useAuthStore();
-
   const request = async (
     endpoint: string,
     method: HttpMethod = "GET",
@@ -33,18 +32,14 @@ export const useApi = <T = any>(): UseApiResult<T> => {
     setLoading(true);
     setError(null);
 
-    try {
-      const isFormData = body instanceof FormData;
+    const token = (await AsyncStorage.getItem("token")) || "";
 
+    if (!token || !endpoint || !BASE_URL) return;
+
+    try {
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
       };
-
-      // Only set Content-Type for JSON
-      if (!isFormData) {
-        headers["Content-Type"] = "application/json";
-      }
 
       const axiosConfig: AxiosRequestConfig = {
         url: `${BASE_URL}${endpoint}`,

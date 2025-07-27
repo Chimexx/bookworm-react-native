@@ -1,61 +1,76 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useApi } from "./useApi";
 
-export const useBooks = () => {
-  const [books, setBooks] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
+const useBooks = () => {
+  const [books, setBooks] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { request } = useApi();
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const loadBooks = useCallback(
-    async ({ pageToLoad = 1, isRefresh = false } = {}) => {
-      if (loading) return;
+    async ({
+      pageToLoad = 1,
+      isRefresh = false,
+      subRoute = "",
+    }: {
+      pageToLoad?: number;
+      isRefresh?: boolean;
+      subRoute?: string;
+    }) => {
+      if (loading || refreshing) return;
 
       if (isRefresh) {
-        setRefreshing(true);
-        setPage(1);
+        setRefreshing(true)
       } else {
         setLoading(true);
       }
 
       try {
         const response = await request(
-          `/books?page=${pageToLoad}&limit=2`,
+          `/books${subRoute}?page=${pageToLoad}&limit=2`,
           "GET"
         );
+
+        if (!isMounted.current) return;
 
         if (response?.books) {
           setBooks((prevBooks) =>
             isRefresh ? response.books : [...prevBooks, ...response.books]
           );
-
           setHasMore(pageToLoad < response.totalPages);
-          if (!isRefresh) setPage(pageToLoad);
         }
-      } catch (err: any) {
-        console.error("Error loading books:", err?.message || err);
-        throw(err.message || err);
+      } catch (error: any) {
+        if (isMounted.current) {
+          console.error("Error loading books:", error?.message || error);
+        }
       } finally {
-        setLoading(false);
-        if (isRefresh) setRefreshing(false);
+        if (isMounted.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
-    }, [])
+    },
+    [request, loading, refreshing]
+  );
 
-  const refreshBooks = () => {
-    setLoading(false);
-    setRefreshing(false)
-
-    loadBooks({ pageToLoad: 1, isRefresh: true });
-  }
-
-  const fetchNextPage = () => {
-    if (hasMore && !loading && !refreshing) {
-      loadBooks({ pageToLoad: page + 1 });
-    }
+  return {
+    books,
+    refreshing,
+    loading,
+    hasMore,
+    loadBooks,
+    setBooks,
   };
-
-  return { books, refreshing, loading, hasMore, refreshBooks, fetchNextPage, loadBooks };
 };
+
+export default useBooks;
