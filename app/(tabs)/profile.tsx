@@ -75,13 +75,13 @@ const Profile = () => {
   };
 
   return (
-    <View style={styles.container}>.
+    <View style={styles.container}>
       <ProfileHeader />
       <View style={styles.buttonContainer}>
-      <LogoutButton logout={logOut} />
-        <TouchableOpacity style={styles.themeButton} onPress={() => setShowThemeSelection(!showThemeSelection)}>
-          <Ionicons name="color-palette-outline" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
+          <LogoutButton logout={logOut} />
+          <TouchableOpacity style={styles.themeButton} onPress={() => setShowThemeSelection(!showThemeSelection)}>
+            <Ionicons name="color-palette-outline" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
       </View>
 
       <View style={styles.booksHeader}>
