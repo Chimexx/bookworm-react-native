@@ -1,8 +1,11 @@
 import { View, ActivityIndicator } from 'react-native'
 import React from 'react'
-import COLORS from '@/constants/colors'
+import { useThemeStore } from '@/store/themeStore';
 
-const Loader = ()=> {
+const Loader = () => {
+
+    const { COLORS } = useThemeStore();
+  
     return (
       <View style={{
         flex: 1,

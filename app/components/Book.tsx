@@ -1,12 +1,12 @@
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import React from 'react';
-import styles from '@/assets/styles/profile.styles';
+import { getProfileStyles } from '@/assets/styles/profile.styles';
 import { IBook } from '@/interface/book.interface';
 import { Image } from 'expo-image';
 import dayjs from 'dayjs';
 import Rating from './Rating';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '@/constants/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 interface BookProps {
   book: IBook;
@@ -20,6 +20,9 @@ const ProfileBook: React.FC<BookProps> = (
   { book,selectedBook, progress, handleDeleteBook, setSelectedBook }) => {
   const date = dayjs(book.createdAt);
 
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getProfileStyles(COLORS)
+  
   const confirmDelete = (book: IBook) => {
     setSelectedBook(book);
 

@@ -1,13 +1,12 @@
 import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { useRouter } from 'expo-router';
-import styles from '@/assets/styles/create.styles';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '@/constants/colors';
 import * as ImagePicker from "expo-image-picker"
-import { dataURItoBlob } from '@/utils/convertImage.utils';
 import { useApi } from '@/hooks.ts/useApi';
 import { Image } from "expo-image"
+import { useThemeStore } from '@/store/themeStore';
+import { getCreateStyles } from '@/assets/styles/create.styles';
 
 const Create = () => {
   const [title, setTitle] = useState("");
@@ -17,6 +16,9 @@ const Create = () => {
 
   const router = useRouter()
   const { request, loading } = useApi();
+  
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getCreateStyles(COLORS)  
 
   const pickImage = async () => {
     try {

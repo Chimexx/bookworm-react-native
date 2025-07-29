@@ -1,14 +1,13 @@
 import { View, Text, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import React, { useCallback, useEffect } from 'react';
-import styles from '@/assets/styles/home.styles';
+import { getHomeStyles } from '@/assets/styles/home.styles';
 import { IBook } from '@/interface/book.interface';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '@/constants/colors';
 import dayjs from 'dayjs';
 import  useBooks  from '@/hooks.ts/useBooks';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
-import Loader from '@/app/components/Loader';
+import { useThemeStore } from '@/store/themeStore';
 
 dayjs.extend(advancedFormat);
 
@@ -22,6 +21,9 @@ const Home = () => {
     loadBooks,
   } = useBooks();
 
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getHomeStyles(COLORS)
+  
   const refreshBooks = useCallback(() => {
     loadBooks({ pageToLoad: 1, isRefresh: true});
   }, []);
@@ -35,7 +37,6 @@ const Home = () => {
   useEffect(() => {
     refreshBooks();
   }, [refreshBooks]);
-
 
   return (
     <View style={styles.container}>
@@ -88,6 +89,10 @@ export default Home;
 
 export const Book = ({ book }: { book: IBook }) => {
   const date = dayjs(book.createdAt);
+
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getHomeStyles(COLORS)
+
   return (
     <View style={styles.bookCard}>
       <View style={styles.bookHeader}>

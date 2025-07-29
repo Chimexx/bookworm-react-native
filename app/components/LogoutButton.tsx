@@ -1,11 +1,13 @@
-import { View, Text, TouchableOpacity, Alert } from 'react-native'
+import { Text, TouchableOpacity, Alert } from 'react-native'
 import React from 'react'
-import styles from '@/assets/styles/profile.styles'
 import { Ionicons } from '@expo/vector-icons'
-import COLORS from '@/constants/colors'
+import { getProfileStyles } from '@/assets/styles/profile.styles'
+import { useThemeStore } from '@/store/themeStore';
 
-const LogoutButton = ({logout}:{logout: () => void}) => {
-
+const LogoutButton = ({ logout }: { logout: () => void }) => {
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getProfileStyles(COLORS)
+  
   const confirmLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {

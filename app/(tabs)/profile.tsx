@@ -14,17 +14,22 @@ import { useAuthStore } from '@/store/authStore';
 import ProfileHeader from '../components/ProfileHeader';
 import LogoutButton from '../components/LogoutButton';
 import { IBook } from '@/interface/book.interface';
-import styles from '@/assets/styles/profile.styles';
-import COLORS from '@/constants/colors';
+import { getProfileStyles } from '@/assets/styles/profile.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useApi } from '@/hooks.ts/useApi';
 import ProfileBook from '../components/Book';
+import { useThemeStore } from '@/store/themeStore';
+import ThemeSelector from '../components/ThemeSelector';
 
 const Profile = () => {
   const router = useRouter();
   const { logOut } = useAuthStore();
   const [progress, setProgress] = React.useState(false);
+  const [showThemeSelection, setShowThemeSelection] = React.useState(false);
   const [selectedBook, setSelectedBook] = React.useState<IBook | null>(null);
+  
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getProfileStyles(COLORS)
 
   const {
     books,
@@ -70,9 +75,14 @@ const Profile = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}>.
       <ProfileHeader />
+      <View style={styles.buttonContainer}>
       <LogoutButton logout={logOut} />
+        <TouchableOpacity style={styles.themeButton} onPress={() => setShowThemeSelection(!showThemeSelection)}>
+          <Ionicons name="color-palette-outline" size={20} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.booksHeader}>
         <Text style={styles.booksTitle}>Your Recommendations</Text>
@@ -130,6 +140,13 @@ const Profile = () => {
           ) : null
         }
       />
+
+      {showThemeSelection &&
+        <ThemeSelector
+          setShowThemeSelection={setShowThemeSelection}
+          showThemeSelection={showThemeSelection}
+        />
+      }
     </View>
   );
 };

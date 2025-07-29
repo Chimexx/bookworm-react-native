@@ -4,6 +4,9 @@ import SafeScreen from "./components/SafeScreen";
 import { StatusBar } from "expo-status-bar";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useThemeStore } from "@/store/themeStore";
+import { IColor } from "@/constants/colors";
 
 export default function RootLayout () {
   const rootNavigation = useRootNavigationState();
@@ -11,10 +14,28 @@ export default function RootLayout () {
   const router = useRouter();
   const segments = useSegments();
   const { checkAuth, user, token, isAuthChecked } = useAuthStore()
+  const { setColors } = useThemeStore()
+
+  useEffect(() => {
+    const setAppColor = async() => {
+      try {
+        const colors = await AsyncStorage.getItem("COLORS");
+        if (colors) {
+          const colorsParsed = JSON.parse(colors) as IColor 
+          setColors(colorsParsed);
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    setAppColor()
+  },[])
   
   useEffect(() => {
     checkAuth()
   }, [segments])
+
   useEffect(() => {
     if (!rootNavigation?.key || !isAuthChecked || segments.length < 1) return;
 

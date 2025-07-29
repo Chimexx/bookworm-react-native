@@ -1,11 +1,13 @@
 import { View } from 'react-native'
 import React from 'react'
 import { IBook } from '@/interface/book.interface';
-import COLORS from '@/constants/colors';
 import { Ionicons } from '@expo/vector-icons';
-import styles from "@/assets/styles/profile.styles";
+import { COLORS } from '@/store/themeStore';
+import { getProfileStyles } from '@/assets/styles/profile.styles';
 
 const Rating = ({ book }: { book: IBook }) => {
+  const styles = getProfileStyles(COLORS)
+  
   return (
     <View style={styles.ratingContainer}>
       {Array.from({ length: 5 }).map((_, index) => {

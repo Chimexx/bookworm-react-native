@@ -1,16 +1,19 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import { useAuthStore } from '@/store/authStore'
-import styles from '@/assets/styles/profile.styles';
 import { Image } from 'expo-image';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { getProfileStyles } from '@/assets/styles/profile.styles';
+import { useThemeStore } from '@/store/themeStore';
 
 dayjs.extend(advancedFormat);
 
 const ProfileHeader = () => {
   const { user } = useAuthStore();
   const date = dayjs(user?.createdAt)
+    const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getProfileStyles(COLORS)
 
   return (
     <View style={styles.profileHeader}>

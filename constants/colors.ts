@@ -1,5 +1,19 @@
-// FOREST
-const COLORS = {
+export interface IColor {
+  primary: string;
+  textPrimary: string;
+  textSecondary: string;
+  textDark: string;
+  placeholderText: string;
+  background: string;
+  cardBackground: string;
+  inputBackground: string;
+  border: string;
+  white: string;
+  black: string;
+};
+
+export const FOREST = {
+  name: "Forest",
   primary: "#4CAF50",
   textPrimary: "#2e5a2e",
   textSecondary: "#688f68",
@@ -13,9 +27,8 @@ const COLORS = {
   black: "#000000",
 };
 
-// RETRO
-/*
-const COLORS = {
+export const RETRO = {
+  name: "Retro",
   primary: "#e17055",
   textPrimary: "#784e2d",
   textSecondary: "#a58e7c",
@@ -28,11 +41,9 @@ const COLORS = {
   white: "#ffffff",
   black: "#000000",
 };
-*/
 
-// OCEAN
-/*
-const COLORS = {
+export const OCEAN = {
+  name: "Ocean",
   primary: "#1976D2", 
   textPrimary: "#1a4971",
   textSecondary: "#6d93b8", 
@@ -45,23 +56,18 @@ const COLORS = {
   white: "#ffffff",
   black: "#000000",
 };
-*/
 
-// BLOSSOM
-/*
-const COLORS = {
-  primary: "#EC407A", 
-  textPrimary: "#7d2150", 
-  textSecondary: "#b06a8f", 
-  textDark: "#5a1836", 
+export const BLOSSOM = {
+  name: "Blossom",
+  primary: "#EC407A",
+  textPrimary: "#7d2150",
+  textSecondary: "#b06a8f",
+  textDark: "#5a1836",
   placeholderText: "#767676",
-  background: "#fce4ec", 
-  cardBackground: "#fff5f8", 
-  inputBackground: "#fef8fa", 
+  background: "#fce4ec",
+  cardBackground: "#fff5f8",
+  inputBackground: "#fef8fa",
   border: "#f8bbd0",
   white: "#ffffff",
   black: "#000000",
-};
-*/
-
-export default COLORS;
+}

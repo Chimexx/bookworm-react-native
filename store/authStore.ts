@@ -16,6 +16,7 @@ interface AuthState {
   isLoading: boolean;
   error: string;
   isAuthChecked: boolean;
+  isCheckingAuth: boolean;
   setUser: (user: User) => void;
   setIsLoading: (loading: boolean) => void;
   checkAuth: () => void;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: "",
   isLoading: false,
   isAuthChecked: false,
+  isCheckingAuth: true,
   error: "",
 
   setUser: (user: User) => {
@@ -109,6 +111,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const message = (error as Error).message;
       set({ error: message, isLoading: false });
       return { success: false, error: message };
+    } finally {
+      set({ isCheckingAuth: false });
     }
   },
 

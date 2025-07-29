@@ -1,19 +1,22 @@
 import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
-import styles from "../../assets/styles/login.styles";
 import { Ionicons } from "@expo/vector-icons";
-import COLORS from '@/constants/colors';
 import { Link, useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
+import { useThemeStore } from '@/store/themeStore';
+import { getLoginStyles } from '@/assets/styles/login.styles';
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { isLoading, login } = useAuthStore();
+  const { isLoading, login, isCheckingAuth } = useAuthStore();
   const router = useRouter();
-
+  
+  const COLORS = useThemeStore(state => state.COLORS);
+  const styles = getLoginStyles(COLORS);
+  
   const handleLogin = async () => {
     const result = await login(email, password);
 
@@ -23,6 +26,8 @@ const Login = () => {
       Alert.alert("Error", result.error || "Something went wrong");
     }
   }
+
+  if(isCheckingAuth) return null
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }}

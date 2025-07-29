@@ -1,14 +1,14 @@
-import { View, Text } from 'react-native'
 import React from 'react'
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import COLORS from '@/constants/colors'
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import SafeScreen from '../components/SafeScreen'
+import { useThemeStore } from '@/store/themeStore'
 
 const TabLayout = () => {
   const insets = useSafeAreaInsets();
-
+  const { COLORS } = useThemeStore();
+  
   return (
     <SafeAreaProvider>
       <SafeScreen>
